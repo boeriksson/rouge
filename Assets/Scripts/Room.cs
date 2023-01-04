@@ -167,12 +167,21 @@ namespace Segment {
         int _xLength;
         int _zLength;
         int _entry;
-        public RoomVariableSegment(int x, int z, GlobalDirection gDirection, int xLength, int zLength, int forks, Segment parent) : base(SegmentType.Room6x6, x, z, gDirection, parent) {
+        public RoomVariableSegment(int x, int z, GlobalDirection gDirection, int xLength, int zLength, int forks, Segment parent, bool isReal) : base(SegmentType.Room6x6, x, z, gDirection, parent) {
             _xLength = xLength;
             _zLength = zLength;
             (_exits, _entry) = GetVariableLengthExits(x, z, gDirection, _xLength, _zLength, forks);
+            if (isReal) Debug.Log("VariableRoom" + xLength + "x" + zLength + " exitCoord&Direction: " + GetExitCoord(_exits));
             _tiles = DirectionConversion.GetGlobalCoordinatesFromLocal(GetBoxCoordinates(GetBoxList(new []{(0, -_entry, _xLength - 1, (_zLength - 1) - _entry)}), x, z, gDirection), X, Z, gDirection);
             _space = GetBoxCoordinates(GetBoxList(new []{(-1, (-_entry - 1), _xLength, _zLength - _entry)}), x, z, gDirection, true);
+        }
+
+        private string GetExitCoord(List<SegmentExit> segmentExits) {
+            var result = "";
+            foreach (SegmentExit exit in segmentExits) {
+                result += "  {" + exit.X + ", " + exit.Z + "} - " + exit.Direction;
+            }
+            return result;
         }
 
         private (List<SegmentExit>, int entry) GetVariableLengthExits(int x, int z, GlobalDirection gDirection, int xLength, int zLength, int forks) {
@@ -182,11 +191,11 @@ namespace Segment {
             var entry = randomGenerator.Generate(potentialZExits.Count);
           
             foreach (int xExit in potentialXExits) {
-                potentialLocalExits.Add((xExit, -entry, LocalDirection.Left));
+                potentialLocalExits.Add((xExit, -entry - 1, LocalDirection.Left));
                 potentialLocalExits.Add((xExit, zLength - entry, LocalDirection.Right));
             }
             foreach (int zExit in potentialZExits) {
-                if (zExit != entry) potentialLocalExits.Add((0, zExit - entry, LocalDirection.Back));
+                if (zExit != entry) potentialLocalExits.Add((-1, zExit - entry, LocalDirection.Back));
                 potentialLocalExits.Add((xLength, zExit - entry, LocalDirection.Straight));
             }
             var percentageOfExitsBase = getPercentageOfExitsBase(forks); new List<int>() {40,30,20,12,7,4,3,2,1};

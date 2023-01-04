@@ -17,9 +17,12 @@ namespace Dunegon {
         public GameObject floor;
         public GameObject mark;
         public GameObject mapper;
+        public GameObject exit;
         public int noOfSegments;
         public int defaultMapSize;
-        private int currentFloor = 0;
+
+        public int restartAfterBackWhenWSIsBelow = 2;
+        private int currentSegment = 0;
         private DunegonHelper helper = new DunegonHelper();
 
         private EnvironmentMgr environmentMgr;
@@ -28,6 +31,7 @@ namespace Dunegon {
         private List<Segment.Segment> segmentList = new List<Segment.Segment>();
         private LevelMap levelMap = new LevelMap();
         private List<GameObject> marks = new List<GameObject>();
+        private List<GameObject> exitList = new List<GameObject>();
         Logger logger = new Logger("./Logs/dunegon.log");
 
         // Start is called before the first frame update
@@ -38,7 +42,7 @@ namespace Dunegon {
 
         void Update() {
             if (Input.GetKeyDown(KeyCode.Space)) {
-                if (currentFloor < noOfSegments && workingSet.Count > 0) {
+                if (currentSegment < noOfSegments && workingSet.Count > 0) {
                     StartCoroutine(AddWorkingSet());
                 }
             }
@@ -65,7 +69,7 @@ namespace Dunegon {
         }
 
         IEnumerator BackupWorkingSet() {
-            RemoveOldMarks();
+            RemoveOldMarksAndExits();
             levelMap.ClearContent(8);
             var segmentsToBack = new List<Segment.Segment>();
             foreach ((SegmentExit, Segment.Segment) wsEntry in workingSet) { 
@@ -96,7 +100,7 @@ namespace Dunegon {
 
         IEnumerator AddWorkingSet()
         {
-            RemoveOldMarks();
+            RemoveOldMarksAndExits();
 
             List<(SegmentExit, Segment.Segment)> nextWorkingSet = new List<(SegmentExit, Segment.Segment)>();
             foreach ((SegmentExit, Segment.Segment) wsEntry in workingSet)
@@ -114,6 +118,7 @@ namespace Dunegon {
                 );
                 if (!(segment is StopSegment)) {
                     AddExitsToNextWorkingSet(nextWorkingSet, segment);
+                    InstantiateExits(segment);
 
                     var tiles = segment.GetTiles();
                     var globalSpaceNeeded = DirectionConversion.GetGlobalCoordinatesFromLocal(segment.NeededSpace(), segment.X, segment.Z, segment.GlobalDirection);
@@ -122,14 +127,13 @@ namespace Dunegon {
                     ShowMarks(segment); // Debug show neededspace
                     SetInstantiatedTiles(segment, tiles);
                     segmentList.Add(segment);
-                    currentFloor++;
+                    currentSegment++;
                 }
-                else
-                {
+                else {
                     var workingSetSize = workingSet.Count;
                     var backedOutSegment = BackoutDeadEnd(segment, 0, 0, workingSetSize);
-                    Debug.Log("##### StopSegment - Backing out of dead end!");
-                    if (workingSetSize < 2) {
+                    Debug.Log("##### StopSegment - Backing out of dead end! backedOutSegment: " + backedOutSegment.Type);
+                    if (workingSetSize < restartAfterBackWhenWSIsBelow) {
                         nextWorkingSet.Add((backedOutSegment.Exits[0], backedOutSegment));
                     }
                 }
@@ -140,11 +144,21 @@ namespace Dunegon {
             yield return null;
         }
 
-        private void RemoveOldMarks() {
+        private void RemoveOldMarksAndExits() {
             foreach (GameObject mark in marks) {
                 Destroy(mark);
             }
+            foreach (GameObject exit in exitList) {
+                Destroy(exit);
+            }
             marks.Clear();
+            exitList.Clear();
+        }
+
+        private void InstantiateExits(Segment.Segment segment) {
+            foreach(SegmentExit segmentExit in segment.Exits) {
+                exitList.Add(Instantiate(exit, new Vector3(segmentExit.X, 0, segmentExit.Z), Quaternion.identity) as GameObject);
+            }
         }
 
         private void SetInstantiatedTiles(Segment.Segment segment, List<(int, int)> tiles)
@@ -162,6 +176,7 @@ namespace Dunegon {
         {
             var segmentsWithExits = new List<(SegmentExit, Segment.Segment)>();
             foreach (SegmentExit segmentExit in segment.Exits) {
+                Debug.Log("Exits " + segment.Type + ": " + segmentExit.X + ", " + segmentExit.Z + ", " + segmentExit.Direction);
                 segmentsWithExits.Add((segmentExit, segment));
             }
 
@@ -188,7 +203,7 @@ namespace Dunegon {
                 ClearSegment(segment);
                 backedOutSegment = BackoutDeadEnd(segment.Parent, segment.X, segment.Z, workingSetSize);
             } else { // We're gonna remove the exit in segment where we roll back to
-                if (workingSetSize >= 2) {
+                if (workingSetSize >= restartAfterBackWhenWSIsBelow) {
                     var segmentExits = segment.Exits;
                     var segmentExitToRemove = segmentExits.Single(exit => exit.X == exitX && exit.Z == exitZ);
                     segmentExits.Remove(segmentExitToRemove);

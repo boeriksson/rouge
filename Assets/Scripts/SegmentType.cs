@@ -7,6 +7,8 @@ namespace Segment {
         Straight,
         Right,
         Left, 
+        StraightRight,
+        StraightLeft,
         LeftRight,
         LeftStraightRight,
         Stop,
@@ -23,7 +25,7 @@ namespace Segment {
     }
     
     public static class SegmentTypeExtension {
-        public static Segment GetSegmentByType(this SegmentType segmentType, int x, int z, GlobalDirection gDirection, int forks, Segment parent) {
+        public static Segment GetSegmentByType(this SegmentType segmentType, int x, int z, GlobalDirection gDirection, int forks, Segment parent, bool isReal = false) {
             switch (segmentType) {
                 case SegmentType.Straight: {
                     return new StraightSegment(x, z, gDirection, parent);
@@ -33,6 +35,12 @@ namespace Segment {
                 }
                 case SegmentType.Left: {
                     return new LeftSegment(x, z, gDirection, parent);
+                }
+                case SegmentType.StraightRight: {
+                    return new StraightRightSegment(x, z, gDirection, parent);
+                }
+                case SegmentType.StraightLeft: {
+                    return new StraightLeftSegment(x, z, gDirection, parent);
                 }
                 case SegmentType.LeftRight: {
                     return new LeftRightSegment(x, z, gDirection, parent);
@@ -50,25 +58,25 @@ namespace Segment {
                     return new Room3x4Segment(x, z, gDirection, forks, parent);
                 }
                 case SegmentType.Room4x4: {
-                    return new RoomVariableSegment(x, z, gDirection, 4, 4, forks, parent);
+                    return new RoomVariableSegment(x, z, gDirection, 4, 4, forks, parent, isReal);
                 }
                 case SegmentType.Room4x5: {
-                    return new RoomVariableSegment(x, z, gDirection, 4, 5, forks, parent);
+                    return new RoomVariableSegment(x, z, gDirection, 4, 5, forks, parent, isReal);
                 }
                 case SegmentType.Room5x4: {
-                    return new RoomVariableSegment(x, z, gDirection, 5, 4, forks, parent);
+                    return new RoomVariableSegment(x, z, gDirection, 5, 4, forks, parent, isReal);
                 }
                 case SegmentType.Room5x5: {
-                    return new RoomVariableSegment(x, z, gDirection, 5, 5, forks, parent);
+                    return new RoomVariableSegment(x, z, gDirection, 5, 5, forks, parent, isReal);
                 }
                 case SegmentType.Room5x6: {
-                    return new RoomVariableSegment(x, z, gDirection, 5, 6, forks, parent);
+                    return new RoomVariableSegment(x, z, gDirection, 5, 6, forks, parent, isReal);
                 }
                 case SegmentType.Room6x5: {
-                    return new RoomVariableSegment(x, z, gDirection, 6, 5, forks, parent);
+                    return new RoomVariableSegment(x, z, gDirection, 6, 5, forks, parent, isReal);
                 }
                 case SegmentType.Room6x6: {
-                    return new RoomVariableSegment(x, z, gDirection, 6, 6, forks, parent);
+                    return new RoomVariableSegment(x, z, gDirection, 6, 6, forks, parent, isReal);
                 }
                 default: {
                     return new StraightSegment(x, z, gDirection, parent);
@@ -76,7 +84,15 @@ namespace Segment {
             }
         }
 
-        public static int GetSegmentTypeWeight(this SegmentType segmentType) {
+        public static int GetSegmentTypeWeight(this SegmentType segmentType, int forks) {
+            Debug.Log("XXXX FORKS: " + forks);
+            var forksConstant = 1f;
+            if (forks < 3) {
+                forksConstant = 1.5f;
+            } else if (forks > 10) {
+                forksConstant = 0.5f;
+            }   
+        
             switch (segmentType) {
                 case SegmentType.Straight: {
                     return 80;
@@ -87,11 +103,17 @@ namespace Segment {
                 case SegmentType.Left: {
                     return 15;
                 }
+                case SegmentType.StraightRight: {
+                    return (int)Math.Round(4 * forksConstant, 0);
+                }
+                case SegmentType.StraightLeft: {
+                    return (int)Math.Round(4 * forksConstant, 0);
+                }
                 case SegmentType.LeftRight: {
-                    return 10;
+                    return (int)Math.Round(6 * forksConstant, 0);
                 }
                 case SegmentType.LeftStraightRight: {
-                    return 5;
+                    return (int)Math.Round(3 * forksConstant, 0);
                 }
                 case SegmentType.DoubleStraight: {
                     return 0;

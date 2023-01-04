@@ -38,7 +38,7 @@ namespace Dunegon {
                         possibleSegments.Add((SegmentType.DoubleStraight, 100));
                         goOnWithStraightDespiteKrock = false;
                     } else {
-                        int segmentWeight = segmentType.GetSegmentTypeWeight();
+                        int segmentWeight = segmentType.GetSegmentTypeWeight(forks);
                         totalWeight += segmentWeight;
                         possibleSegments.Add(item: (segmentType, segmentWeight));
                     }
@@ -52,8 +52,9 @@ namespace Dunegon {
             foreach ((SegmentType segmentType, int weight) in possibleSegments) {
                 collectWeight += weight;
                 if (collectWeight >= ran) {
-                    var segment = segmentType.GetSegmentByType(x, z, gDirection, forks, parent);
+                    var segment = segmentType.GetSegmentByType(x, z, gDirection, forks, parent, true);
                     //levelMap.AddCooridnates(segment.NeededSpace(), 8);
+                    Debug.Log("Returning: " + segment.Type + " parent: " + segment.Parent?.Type);
                     return segment; 
                 }
             }
@@ -64,7 +65,7 @@ namespace Dunegon {
         public Boolean checkIfSpaceIsAvailiable(List<(int, int)> globalSpaceNeeded, LevelMap levelMap, Logger logger, SegmentType segmentType) {
             foreach((int, int) space in globalSpaceNeeded) {
                 if (levelMap.GetValueAtCoordinate(space) != 0) {
-                    //logger.WriteLine("Krock at coordinate: {" + space.Item1 + ", " + space.Item2 + "}");
+                    logger.WriteLine("Krock at coordinate: {" + space.Item1 + ", " + space.Item2 + "}");
                     if (
                         segmentType == SegmentType.Straight 
                         && levelMap.GetValueAtCoordinate(space) == 1 
