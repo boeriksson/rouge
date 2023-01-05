@@ -36,6 +36,7 @@ namespace Dunegon {
                 if (checkIfSpaceIsAvailiable(globalSpaceNeeded, levelMap, logger, segmentType)) {
                     if (goOnWithStraightDespiteKrock) {
                         possibleSegments.Add((SegmentType.DoubleStraight, 100));
+                        Debug.Log("XXXXX DoubleStraight!!!");
                         goOnWithStraightDespiteKrock = false;
                     } else {
                         int segmentWeight = segmentType.GetSegmentTypeWeight(forks);
@@ -65,11 +66,10 @@ namespace Dunegon {
         public Boolean checkIfSpaceIsAvailiable(List<(int, int)> globalSpaceNeeded, LevelMap levelMap, Logger logger, SegmentType segmentType) {
             foreach((int, int) space in globalSpaceNeeded) {
                 if (levelMap.GetValueAtCoordinate(space) != 0) {
-                    logger.WriteLine("Krock at coordinate: {" + space.Item1 + ", " + space.Item2 + "}");
                     if (
                         segmentType == SegmentType.Straight 
                         && levelMap.GetValueAtCoordinate(space) == 1 
-                        && randomGenerator.Generate(100) > 80
+                        && randomGenerator.Generate(100) > 85
                         ) {
                         //logger.WriteLine("############################### Going on with straightsegment despite KROCK!!!");
                         goOnWithStraightDespiteKrock = true;

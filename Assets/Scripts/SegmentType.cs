@@ -11,6 +11,7 @@ namespace Segment {
         StraightLeft,
         LeftRight,
         LeftStraightRight,
+        StraightNoCheck,
         Stop,
         Room3x3,
         Room3x4,
@@ -29,6 +30,9 @@ namespace Segment {
             switch (segmentType) {
                 case SegmentType.Straight: {
                     return new StraightSegment(x, z, gDirection, parent);
+                }
+                case SegmentType.StraightNoCheck: {
+                    return new StraightNoCheckSegment(x, z, gDirection, parent);
                 }
                 case SegmentType.Right: {
                     return new RightSegment(x, z, gDirection, parent);
@@ -85,7 +89,6 @@ namespace Segment {
         }
 
         public static int GetSegmentTypeWeight(this SegmentType segmentType, int forks) {
-            Debug.Log("XXXX FORKS: " + forks);
             var forksConstant = 1f;
             if (forks < 3) {
                 forksConstant = 1.5f;
@@ -116,6 +119,9 @@ namespace Segment {
                     return (int)Math.Round(3 * forksConstant, 0);
                 }
                 case SegmentType.DoubleStraight: {
+                    return 0;
+                }
+                case SegmentType.StraightNoCheck: {
                     return 0;
                 }
                 case SegmentType.Room3x3: {
@@ -152,5 +158,3 @@ namespace Segment {
         }
     }
 }
-
-

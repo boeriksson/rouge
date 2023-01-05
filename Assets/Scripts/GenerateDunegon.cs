@@ -116,17 +116,18 @@ namespace Dunegon {
                     workingSet.Count,
                     parentSegment
                 );
-                if (!(segment is StopSegment)) {
-                    AddExitsToNextWorkingSet(nextWorkingSet, segment);
-                    InstantiateExits(segment);
-
-                    var tiles = segment.GetTiles();
-                    var globalSpaceNeeded = DirectionConversion.GetGlobalCoordinatesFromLocal(segment.NeededSpace(), segment.X, segment.Z, segment.GlobalDirection);
-                    levelMap.AddCooridnates(globalSpaceNeeded, 8);
-                    levelMap.AddCooridnates(tiles, 1);
-                    ShowMarks(segment); // Debug show neededspace
-                    SetInstantiatedTiles(segment, tiles);
-                    segmentList.Add(segment);
+                if (!(segment is StopSegment))
+                {
+                    AddSegment(segment);
+                    var addOnSegments = segment.GetAddOnSegments();
+                    if (addOnSegments.Count > 0) {
+                        foreach(Segment.Segment addSegment in addOnSegments) {
+                            AddSegment(addSegment);    
+                            AddExitsToNextWorkingSet(nextWorkingSet, addSegment);
+                        }
+                    } else {
+                        AddExitsToNextWorkingSet(nextWorkingSet, segment);
+                    }
                     currentSegment++;
                 }
                 else {
@@ -142,6 +143,18 @@ namespace Dunegon {
             workingSet.Clear();
             workingSet.AddRange(nextWorkingSet);
             yield return null;
+        }
+
+        private void AddSegment(Segment.Segment segment)
+        {
+            InstantiateExits(segment);
+            var tiles = segment.GetTiles();
+            var globalSpaceNeeded = DirectionConversion.GetGlobalCoordinatesFromLocal(segment.NeededSpace(), segment.X, segment.Z, segment.GlobalDirection);
+            levelMap.AddCooridnates(globalSpaceNeeded, 8);
+            levelMap.AddCooridnates(tiles, 1);
+            ShowMarks(segment); // Debug show neededspace
+            SetInstantiatedTiles(segment, tiles);
+            segmentList.Add(segment);
         }
 
         private void RemoveOldMarksAndExits() {
@@ -176,7 +189,6 @@ namespace Dunegon {
         {
             var segmentsWithExits = new List<(SegmentExit, Segment.Segment)>();
             foreach (SegmentExit segmentExit in segment.Exits) {
-                Debug.Log("Exits " + segment.Type + ": " + segmentExit.X + ", " + segmentExit.Z + ", " + segmentExit.Direction);
                 segmentsWithExits.Add((segmentExit, segment));
             }
 
@@ -198,7 +210,7 @@ namespace Dunegon {
 
         private Segment.Segment BackoutDeadEnd(Segment.Segment segment, int exitX, int exitZ, int workingSetSize) {
             var backedOutSegment = segment;
-            var backableSegmentsArray = new SegmentType[] {SegmentType.Straight, SegmentType.Left, SegmentType.Right, SegmentType.Stop, SegmentType.LeftRight, SegmentType.LeftStraightRight};
+            var backableSegmentsArray = new SegmentType[] {SegmentType.Straight, SegmentType.Left, SegmentType.Right, SegmentType.Stop, SegmentType.LeftRight, SegmentType.LeftStraightRight, SegmentType.StraightNoCheck};
             if (segment.Exits.Count <= 1 && backableSegmentsArray.Contains(segment.Type)) {
                 ClearSegment(segment);
                 backedOutSegment = BackoutDeadEnd(segment.Parent, segment.X, segment.Z, workingSetSize);

@@ -79,6 +79,9 @@ namespace Segment {
 
         public abstract List<(int, int)> GetTiles();
         public abstract List<(int, int)> NeededSpace();
+        public virtual List<Segment> GetAddOnSegments() {
+            return new List<Segment>();
+        }
     }
     public class StraightSegment : Segment {
         public StraightSegment(int x, int z, GlobalDirection gDirection, Segment parent) : base(SegmentType.Straight, x, z, gDirection, parent) {
@@ -104,8 +107,30 @@ namespace Segment {
             space.Add((2, -1));
             space.Add((2, 0));
             space.Add((2, 1));
-            space.Add((0, -1));
-            space.Add((0, 1));
+            //space.Add((0, -1));
+            //space.Add((0, 1));
+            return space;
+        }
+    }
+
+    public class StraightNoCheckSegment : Segment {
+        public StraightNoCheckSegment(int x, int z, GlobalDirection gDirection, Segment parent) : base(SegmentType.StraightNoCheck, x, z, gDirection, parent) {
+            _exits = new List<SegmentExit>();
+            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 1, 0, LocalDirection.Straight));
+        }
+
+        public override List<(int, int)> GetTiles()
+        {
+            List<(int, int)> tiles = new List<(int, int)>();
+            tiles.Add((_entryX, _entryZ));
+            return tiles;
+        }
+
+        /**
+            Return needed spaces in relation to start (0, 0))
+        */
+        override public List<(int, int)> NeededSpace() {
+            var space = new List<(int, int)>();
             return space;
         }
     }
@@ -147,7 +172,7 @@ namespace Segment {
             space.Add((1, 2));
             space.Add((0, 2));
             space.Add((-1,2));
-            space.Add((1, 0));
+            //space.Add((1, 0));
             return space;
         }
     }
@@ -173,7 +198,7 @@ namespace Segment {
             space.Add((1, -2));
             space.Add((0, -2));
             space.Add((-1, -2));
-            space.Add((1, 0));
+            //space.Add((1, 0));
             return space;
         }
     }
@@ -212,12 +237,12 @@ namespace Segment {
         private List<(int, int)> _tiles;
         public StraightRightSegment(int x, int z, GlobalDirection gDirection, Segment parent) : base(SegmentType.StraightRight, x, z, gDirection, parent) {
             _exits = new List<SegmentExit>();
-            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 2, 0, LocalDirection.Straight));
-            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 0, 2, LocalDirection.Right));
+            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 1, 0, LocalDirection.Straight));
+            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 0, 1, LocalDirection.Right));
             var localTiles = new List<(int, int)>();
             localTiles.Add((0, 0));
-            localTiles.Add((1, 0));
-            localTiles.Add((0, 1));
+            //localTiles.Add((1, 0));
+            //localTiles.Add((0, 1));
             _tiles = DirectionConversion.GetGlobalCoordinatesFromLocal(localTiles, _entryX, _entryZ, gDirection);
         }
 
@@ -241,18 +266,24 @@ namespace Segment {
             space.Add((-1, 3));
             return space;
         }
+        override public List<Segment> GetAddOnSegments() {
+            var addOnSegments = new List<Segment>();
+            foreach(SegmentExit exit in _exits) {
+                var segment = new StraightNoCheckSegment(exit.X, exit.Z, exit.Direction, this);
+                addOnSegments.Add(segment);
+            }
+            return addOnSegments;
+        }
     }
 
     public class StraightLeftSegment : Segment {
         private List<(int, int)> _tiles;
         public StraightLeftSegment(int x, int z, GlobalDirection gDirection, Segment parent) : base(SegmentType.StraightLeft, x, z, gDirection, parent) {
             _exits = new List<SegmentExit>();
-            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 2, 0, LocalDirection.Straight));
-            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 0, -2, LocalDirection.Left));
+            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 1, 0, LocalDirection.Straight));
+            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 0, -1, LocalDirection.Left));
             var localTiles = new List<(int, int)>();
             localTiles.Add((0, 0));
-            localTiles.Add((1, 0));
-            localTiles.Add((0, -1));
             _tiles = DirectionConversion.GetGlobalCoordinatesFromLocal(localTiles, _entryX, _entryZ, gDirection);
         }
 
@@ -276,6 +307,15 @@ namespace Segment {
             space.Add((-1, -3));
             return space;
         }
+
+        override public List<Segment> GetAddOnSegments() {
+            var addOnSegments = new List<Segment>();
+            foreach(SegmentExit exit in _exits) {
+                var segment = new StraightNoCheckSegment(exit.X, exit.Z, exit.Direction, this);
+                addOnSegments.Add(segment);
+            }
+            return addOnSegments;
+        }
     }
 
     public class LeftStraightRightSegment : Segment {
@@ -283,14 +323,11 @@ namespace Segment {
 
         public LeftStraightRightSegment(int x, int z, GlobalDirection gDirection, Segment parent) : base(SegmentType.Left, x, z, gDirection, parent) {
             _exits = new List<SegmentExit>();
-            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 0, -2, LocalDirection.Left));
-            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 0, 2, LocalDirection.Right));
-            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 2, 0, LocalDirection.Straight));
+            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 0, -1, LocalDirection.Left));
+            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 0, 1, LocalDirection.Right));
+            _exits.Add(new SegmentExit(_entryX, _entryZ, gDirection, 1, 0, LocalDirection.Straight));
             var localTiles = new List<(int, int)>();
             localTiles.Add((0, 0));
-            localTiles.Add((0, -1));
-            localTiles.Add((0, 1));
-            localTiles.Add((1, 0));
             _tiles = DirectionConversion.GetGlobalCoordinatesFromLocal(localTiles, _entryX, _entryZ, gDirection);
         }
 
@@ -324,18 +361,29 @@ namespace Segment {
             space.Add((-1,3));
             return space;
         }
+
+        override public List<Segment> GetAddOnSegments() {
+            var addOnSegments = new List<Segment>();
+            foreach(SegmentExit exit in _exits) {
+                var segment = new StraightNoCheckSegment(exit.X, exit.Z, exit.Direction, this);
+                addOnSegments.Add(segment);
+            }
+            return addOnSegments;
+        }
     }
     public class DoubleStraightSegment : Segment {
-        public DoubleStraightSegment(int x, int z, GlobalDirection gDirection, Segment parent) : base(SegmentType.Straight, x, z, gDirection, parent) {
+        private List<(int, int)> _tiles;
+        public DoubleStraightSegment(int x, int z, GlobalDirection gDirection, Segment parent) : base(SegmentType.DoubleStraight, x, z, gDirection, parent) {
             _exits = new List<SegmentExit>();
+            var localTiles = new List<(int, int)>();
+            localTiles.Add((0, 0));
+            localTiles.Add((1, 0));
+            localTiles.Add((2, 0));
+            _tiles = DirectionConversion.GetGlobalCoordinatesFromLocal(localTiles, _entryX, _entryZ, gDirection);
         }
 
-        public override List<(int, int)> GetTiles()
-        {
-            List<(int, int)> tiles = new List<(int, int)>();
-            tiles.Add((_entryX, _entryZ));
-            tiles.Add((_entryX + 1, _entryZ));
-            return tiles;
+        public override List<(int, int)> GetTiles() {
+            return _tiles;
         }
 
         /**
@@ -343,12 +391,10 @@ namespace Segment {
         */
         override public List<(int, int)> NeededSpace() {
             var space = new List<(int, int)>();
-            space.Add((2, -1));
-            space.Add((2, 0));
-            space.Add((2, 1));
-            space.Add((3, -1));
-            space.Add((3, 0));
-            space.Add((3, 1));
+            space.Add((0, 0));
+            space.Add((1, 0));
+            space.Add((1, -1));
+            space.Add((1, 1));
             return space;
         }
     }
