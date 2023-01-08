@@ -1,14 +1,13 @@
 /**
     Make it "less" likely with straightsegments when there are many in a row!
-
-    Bugg när "tarmar" ibland inte verkar backas ur?
-
+    Make corridors scalable
     Avancerade större rum = eget segment med random? Kanske kolla om man är främst i GlobalDirection, och i så fall aktivera möjligheten?
     Segmented room - several boxes!
 
     Skicka med om det är "Decidenextsegment" till rumsskapande så man slipper räkna på utgångar osv (svårt - logik med utseende integrerat med exits)
 
     ## Markera scanningsområden i map så att det går att kolla om andra scannar samma områden.. Resetta mellan varje workingSet - blev inte bra!
+    --Bugg när "tarmar" ibland inte verkar backas ur?
     --Bugg med att LevelMap inte uppdateras i ett område runt starten
     --Bugg när detection inte verkar funka och korridorer kommer för nära andra
     --Inte backa ur "rum"

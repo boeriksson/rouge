@@ -20,6 +20,7 @@ namespace Dunegon {
         public GameObject exit;
         public int noOfSegments;
         public int defaultMapSize;
+        public int scale;
 
         public int restartAfterBackWhenWSIsBelow = 2;
         private int currentSegment = 0;
@@ -170,7 +171,9 @@ namespace Dunegon {
 
         private void InstantiateExits(Segment.Segment segment) {
             foreach(SegmentExit segmentExit in segment.Exits) {
-                exitList.Add(Instantiate(exit, new Vector3(segmentExit.X, 0, segmentExit.Z), Quaternion.identity) as GameObject);
+                var iExit = Instantiate(exit, new Vector3(segmentExit.X * scale, 0, segmentExit.Z * scale), Quaternion.identity) as GameObject;
+                iExit.transform.localScale = new Vector3(scale, 0.5f, scale);
+                exitList.Add(iExit);
             }
         }
 
@@ -178,7 +181,8 @@ namespace Dunegon {
         {
             var instantiatedTiles = new List<GameObject>();
             foreach ((int x, int z) in tiles) {
-                GameObject tileFloor = Instantiate(floor, new Vector3(x, 0, z), Quaternion.identity) as GameObject;
+                GameObject tileFloor = Instantiate(floor, new Vector3(x * scale, 0, z * scale), Quaternion.identity) as GameObject;
+                tileFloor.transform.localScale = new Vector3(scale, 0.1f, scale);
                 tileFloor.transform.SetParent(environmentMgr.transform);
                 instantiatedTiles.Add(tileFloor);
             }
@@ -202,7 +206,8 @@ namespace Dunegon {
             var globalNeededSpace = Direction.DirectionConversion.GetGlobalCoordinatesFromLocal(localSpaceNeeded, segment.X, segment.Z, segment.GlobalDirection);
             //Debug.Log("Segment: " + segment.Type + " globalSpaceNeeded: " + DebugUtil.printTupleList(globalNeededSpace));
             foreach ((int, int) mark in globalNeededSpace) {
-                GameObject krockScan = Instantiate(this.mark, new Vector3(mark.Item1, 0, mark.Item2), Quaternion.identity) as GameObject;
+                GameObject krockScan = Instantiate(this.mark, new Vector3(mark.Item1 * scale, 0, mark.Item2 * scale), Quaternion.identity) as GameObject;
+                krockScan.transform.localScale = new Vector3(scale, 0.1f, scale);
                 krockScan.transform.SetParent(environmentMgr.transform);
                 marks.Add(krockScan);
             }
@@ -238,7 +243,8 @@ namespace Dunegon {
             for (int x = 0; x < map.GetLength(0); x++) {
                 for (int z = 0; z < map.GetLength(1); z++) {
                     if (map[x, z] != 0) {
-                        GameObject mapObj = Instantiate(mapper, new Vector3(x - (map.GetLength(0)/2), 0, z - (map.GetLength(1)/2)), Quaternion.identity) as GameObject;
+                        GameObject mapObj = Instantiate(mapper, new Vector3((x - (map.GetLength(0)/2)) * scale, 0, (z - (map.GetLength(1)/2))) * scale, Quaternion.identity) as GameObject;
+                        mapObj.transform.localScale = new Vector3(scale, 0.3f, scale);
                         mapObj.transform.SetParent(environmentMgr.transform);
                     }
                 }
